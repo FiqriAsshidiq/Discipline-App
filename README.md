@@ -1,5 +1,4 @@
-# Flutter Template
-
+# Flutter 
 Flutter template project - A simple TODO list app. This template provides simple UI and scalable project structure that goes beyond the simple counter example. 
 
 The app has basic login and signup screens, task list, task details, and settings screen. It supports multiple languages and in-app language change, and light and dark theme. 
@@ -63,46 +62,9 @@ and [this blog post][blog_flavouring_flutter].
 [flutter_flavours_official]: https://flutter.dev/docs/deployment/flavors
 [blog_flavouring_flutter]: https://medium.com/@salvatoregiordanoo/flavoring-flutter-392aaa875f36
 
-# Use as template
-
-You can copy this repository with the _Use this template_ button and go on from there, or download the code and use it in you project.
-Afterwards, you'll need to rename the project and change the app id and configuration. There are ToDos scattered through the project that will help you transition this project to your needs.
-
-<img src="https://github.com/webfactorymk/flutter-template/blob/main/diagrams/use_as_template.png" alt="Use as template" width="520">
-
-
-## [Head to the Wiki page for project documentation.](https://github.com/webfactorymk/flutter-template/wiki)
-
-## Resolve TODOs
-
-Go over the TODOs scattered around the project and resolve as much as possible. They will help you configure the project to your needs.
-
-In AndroidStudio you can view all TODOs in the bottom tab as shown in this picture:
-
-![TODOs bottom tab in AS](http://jubin.tech/assets/pic/20181023-1-todo-in-AS.png)
-
-## App Configuration
-
-To configure the app for your environment head to the `/config` directory:
-
-- add flavor-specific valus in `FlavorConfig` -> `FlavorValues`
-- configure firebase in `FirebaseConfig`, duh
-- configure API constants in `network_constants`
-- also see `pre_app_config` and `post_app_config` for preloading essential app components
-
-_See the [wiki configuration page] for more info._
-
-[wiki configuration page]: https://github.com/webfactorymk/flutter-template/wiki/Configuration
-
-
 # Under the hood
 
 ## Data Management
-
-![Alt text][high_lvl_diagram]
-
-[high_lvl_diagram]: diagrams/high_lvl_diagram.png "High level diagram"
-
 
 ### [TasksDataSource]
 
@@ -147,21 +109,6 @@ For more information and generating code continuously see [the documentation][js
 
 [json_serialization]: https://flutter.dev/docs/development/data-and-backend/json
 
-## Declarative UI and state management
-
-[Flutter is declarative framework][declarative_ui]. This means that Flutter builds its user interface to reflect the current state of the app. 
-
-<img src="https://docs.flutter.dev/assets/images/docs/development/data-and-backend/state-mgmt/ui-equals-function-of-state.png" alt="High level diagram" width="350">
-
-~~This template attempts to be unopinionated and does not yet use a [state management tool][state_management_options].~~ ...we use [BLoC] now. But, each app service has an updates [Stream][dart_streams] that clients can subscribe to and receive state updates. See the [UpdatesStream<T> mixin][updates_mixin]. It's up to you to use a tool of your choice, or don't use one at all. 
-See `TasksRepository#taskEventUpdatesStream` and `TasksRepository#taskGroupUpdatesStream` in [TasksRepository][tasks_repository]
-
-[declarative_ui]: https://flutter.dev/docs/development/data-and-backend/state-mgmt/declarative
-[state_management_options]: https://flutter.dev/docs/development/data-and-backend/state-mgmt/options
-[dart_streams]: https://dart.dev/tutorials/language/streams
-[BLoC]: https://pub.dev/packages/flutter_bloc
-[updates_mixin]: lib/util/updates_stream.dart
-
 
 ## Dependency Management
 
@@ -183,6 +130,3 @@ Prefer to use this logger over print statements.
 - `Log.w(message)` for warning messages
 - `Log.e(object)` for error messages (this will also report a firebase non-fatal error)
   
-## Tests
-
-The test package contains unit tests for almost all components. Be sure to give it a look.
