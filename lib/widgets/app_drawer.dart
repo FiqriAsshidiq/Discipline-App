@@ -31,8 +31,15 @@ class AppDrawer extends StatelessWidget {
           _buildItem(
             context,
             icon: Icons.list,
-            title: "View All",
+            title: "Schuldes",
             route: '/viewall',
+          ),
+
+          _buildItem(
+            context,
+            icon: Icons.check_circle,
+            title: "Activity",
+            route: '/activity',
           ),
         ],
       ),
