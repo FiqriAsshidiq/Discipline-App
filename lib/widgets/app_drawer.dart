@@ -8,38 +8,90 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: Text(
-              "Discipline App",
-              style: TextStyle(color: Colors.white, fontSize: 22),
+          /// HEADER
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 50, left: 20, bottom: 20),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.asset(
+                    "assets/images/logo.png",
+                    width: 30,
+                    height: 30,
+                  ),
+                ),
+                const SizedBox(width: 15),
+
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Discipline App",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Build your habits",
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
-          _buildItem(context, icon: Icons.home, title: "Home", route: '/home'),
+          const SizedBox(height: 10),
 
-          _buildItem(
-            context,
-            icon: Icons.add,
-            title: "Create",
-            route: '/create',
-          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              children: [
+                _buildItem(
+                  context,
+                  icon: Icons.home,
+                  title: "Home",
+                  route: '/home',
+                ),
 
-          _buildItem(
-            context,
-            icon: Icons.list,
-            title: "Schuldes",
-            route: '/viewall',
-          ),
+                _buildItem(
+                  context,
+                  icon: Icons.add_circle,
+                  title: "Create",
+                  route: '/create',
+                ),
 
-          _buildItem(
-            context,
-            icon: Icons.check_circle,
-            title: "Activity",
-            route: '/activity',
+                _buildItem(
+                  context,
+                  icon: Icons.list_alt,
+                  title: "Schedules",
+                  route: '/viewall',
+                ),
+
+                _buildItem(
+                  context,
+                  icon: Icons.check_circle,
+                  title: "Activity",
+                  route: '/activity',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -54,22 +106,29 @@ class AppDrawer extends StatelessWidget {
   }) {
     final bool isActive = currentRoute == route;
 
-    return ListTile(
-      leading: Icon(icon, color: isActive ? Colors.blue : Colors.black),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? Colors.blue : Colors.black,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
       ),
-      onTap: () {
-        Navigator.pop(context);
+      child: ListTile(
+        leading: Icon(icon, color: isActive ? Colors.blue : Colors.grey[700]),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isActive ? Colors.blue : Colors.black87,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
+        onTap: () {
+          Navigator.pop(context);
 
-        if (!isActive) {
-          Navigator.pushReplacementNamed(context, route);
-        }
-      },
+          if (!isActive) {
+            Navigator.pushReplacementNamed(context, route);
+          }
+        },
+      ),
     );
   }
 }

@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/models/schedule_model.dart';
 import '../../../core/services/schedule_service.dart';
-import '../../../features/create/schedule_list_page.dart';
 import '../../widgets/app_drawer.dart';
 
 class CreatePage extends StatefulWidget {
@@ -40,6 +38,7 @@ class _CreatePageState extends State<CreatePage> {
     if (picked != null) {
       final formatted =
           "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
+
       controller.text = formatted;
     }
   }
@@ -73,165 +72,143 @@ class _CreatePageState extends State<CreatePage> {
   }
 
   @override
-  void dispose() {
-    _titleController.dispose();
-    _startController.dispose();
-    _endController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Create Schedule"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      drawer: AppDrawer(currentRoute: '/create'),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('asset/images/BG_create.png', fit: BoxFit.cover),
-          ),
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.4)),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                    child: Container(
-                      padding: const EdgeInsets.all(25),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            "Create Schedule",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+      drawer: const AppDrawer(currentRoute: '/create'),
 
-                          const SizedBox(height: 20),
+      appBar: AppBar(title: const Text("Create Activity"), elevation: 0),
 
-                          TextField(
-                            controller: _titleController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: _inputDecoration("Activity Title"),
-                          ),
+      backgroundColor: const Color.fromARGB(255, 241, 241, 241),
 
-                          const SizedBox(height: 15),
-
-                          DropdownButtonFormField<String>(
-                            value: _selectedDay,
-                            dropdownColor: Colors.black87,
-                            style: const TextStyle(color: Colors.white),
-                            items: _days
-                                .map(
-                                  (day) => DropdownMenuItem(
-                                    value: day,
-                                    child: Text(day),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedDay = value!;
-                              });
-                            },
-                            decoration: _inputDecoration("Day"),
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          TextField(
-                            controller: _startController,
-                            readOnly: true,
-                            style: const TextStyle(color: Colors.white),
-                            onTap: () => _pickTime(_startController),
-                            decoration: _inputDecoration("Start Time"),
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          TextField(
-                            controller: _endController,
-                            readOnly: true,
-                            style: const TextStyle(color: Colors.white),
-                            onTap: () => _pickTime(_endController),
-                            decoration: _inputDecoration("End Time"),
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _saveSchedule,
-                              child: const Text("Save"),
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.white),
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const ScheduleListPage(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                "View All Schedules",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Create New Activity",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  SizedBox(height: 6),
+
+                  Text(
+                    "Add activity to your weekly schedule",
+                    style: TextStyle(color: Color.fromARGB(228, 255, 255, 255)),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 📋 FORM CARD
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    /// TITLE
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: "Activity Title",
+                        prefixIcon: Icon(Icons.edit),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    /// DAY
+                    DropdownButtonFormField<String>(
+                      value: _selectedDay,
+                      items: _days
+                          .map(
+                            (day) =>
+                                DropdownMenuItem(value: day, child: Text(day)),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedDay = value!;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: "Day",
+                        prefixIcon: Icon(Icons.calendar_today),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    /// START TIME
+                    TextField(
+                      controller: _startController,
+                      readOnly: true,
+                      onTap: () => _pickTime(_startController),
+                      decoration: const InputDecoration(
+                        labelText: "Start Time",
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    /// END TIME
+                    TextField(
+                      controller: _endController,
+                      readOnly: true,
+                      onTap: () => _pickTime(_endController),
+                      decoration: const InputDecoration(
+                        labelText: "End Time",
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    /// BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saveSchedule,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Save Activity",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
-      enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.white54),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.white),
-        borderRadius: BorderRadius.circular(15),
+          ],
+        ),
       ),
     );
   }

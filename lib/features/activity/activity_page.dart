@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../../widgets/app_drawer.dart';
 import '../../core/models/schedule_model.dart';
 import '../../core/models/activity_status_model.dart';
 import '../../core/services/schedule_service.dart';
+import '../../widgets/app_drawer.dart';
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
@@ -14,159 +14,303 @@ class ActivityPage extends StatefulWidget {
 
 class _ActivityPageState extends State<ActivityPage> {
   final ScheduleService _service = ScheduleService();
-  late Box<ActivityStatusModel> statusBox;
+
+  final List<String> _days = [
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+    "Minggu",
+  ];
+
+  List<ScheduleModel> todayActivities = [];
 
   @override
   void initState() {
     super.initState();
-    statusBox = Hive.box<ActivityStatusModel>('activity_status');
+    loadTodayActivities();
   }
 
-  String _todayName() {
-    final weekday = DateTime.now().weekday;
+  void loadTodayActivities() {
+    final today = DateTime.now();
+    final dayName = _days[today.weekday - 1];
 
-    const days = [
-      "Senin",
-      "Selasa",
-      "Rabu",
-      "Kamis",
-      "Jumat",
-      "Sabtu",
-      "Minggu",
-    ];
-
-    return days[weekday - 1];
-  }
-
-  String _todayDate() {
-    final now = DateTime.now();
-    return "${now.year}-${now.month}-${now.day}";
-  }
-
-  bool _isCompleted(String scheduleKey) {
-    final key = "${scheduleKey}_${_todayDate()}";
-
-    final status = statusBox.get(key);
-
-    if (status == null) return false;
-
-    return status.isCompleted;
-  }
-
-  void _toggleActivity(ScheduleModel schedule) {
-    final key = "${schedule.key}_${_todayDate()}";
-
-    final status = statusBox.get(key);
-
-    if (status == null) {
-      statusBox.put(
-        key,
-        ActivityStatusModel(
-          scheduleKey: schedule.key.toString(),
-          date: _todayDate(),
-          isCompleted: true,
-        ),
-      );
-    } else {
-      status.isCompleted = !status.isCompleted;
-      status.save();
-    }
+    todayActivities = _service
+        .getSchedules()
+        .where((s) => s.day == dayName)
+        .toList();
 
     setState(() {});
   }
 
-  double _calculateProgress(List<ScheduleModel> schedules) {
-    if (schedules.isEmpty) return 0;
+  bool isCompleted(ScheduleModel activity) {
+    final box = Hive.box<ActivityStatusModel>('activity_status');
 
-    int completed = 0;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final key = "$today-${activity.key}";
 
-    for (var s in schedules) {
-      if (_isCompleted(s.key.toString())) {
-        completed++;
+    final data = box.get(key);
+
+    return data?.isCompleted ?? false;
+  }
+
+  void toggleComplete(ScheduleModel activity, bool value) {
+    final box = Hive.box<ActivityStatusModel>('activity_status');
+
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final key = "$today-${activity.key}";
+
+    box.put(
+      key,
+      ActivityStatusModel(
+        scheduleKey: activity.key.toString(),
+        date: today,
+        isCompleted: value,
+      ),
+    );
+
+    setState(() {});
+  }
+
+  double getProgress() {
+    if (todayActivities.isEmpty) return 0;
+
+    int done = todayActivities.where((a) => isCompleted(a)).length;
+
+    return done / todayActivities.length;
+  }
+
+  int getStreak() {
+    final box = Hive.box<ActivityStatusModel>('activity_status');
+
+    int streak = 0;
+    DateTime checkDay = DateTime.now();
+
+    while (true) {
+      final dayName = _days[checkDay.weekday - 1];
+
+      final activities = _service
+          .getSchedules()
+          .where((s) => s.day == dayName)
+          .toList();
+
+      if (activities.isEmpty) break;
+
+      bool allDone = activities.every((a) {
+        final date = checkDay.toIso8601String().substring(0, 10);
+        final key = "$date-${a.key}";
+        final data = box.get(key);
+
+        return data?.isCompleted ?? false;
+      });
+
+      if (allDone) {
+        streak++;
+        checkDay = checkDay.subtract(const Duration(days: 1));
+      } else {
+        break;
       }
     }
 
-    return completed / schedules.length;
+    return streak;
+  }
+
+  Map<String, int> getWeeklyStats() {
+    final box = Hive.box<ActivityStatusModel>('activity_status');
+
+    Map<String, int> stats = {};
+
+    for (int i = 0; i < 7; i++) {
+      DateTime day = DateTime.now().subtract(Duration(days: i));
+
+      final dayName = _days[day.weekday - 1];
+
+      final activities = _service
+          .getSchedules()
+          .where((s) => s.day == dayName)
+          .toList();
+
+      int done = activities.where((a) {
+        final date = day.toIso8601String().substring(0, 10);
+        final key = "$date-${a.key}";
+        final data = box.get(key);
+
+        return data?.isCompleted ?? false;
+      }).length;
+
+      stats[dayName] = done;
+    }
+
+    return stats;
   }
 
   @override
   Widget build(BuildContext context) {
-    final today = _todayName();
-
-    final schedules = _service
-        .getSchedules()
-        .where((s) => s.day == today)
-        .toList();
-
-    final progress = _calculateProgress(schedules);
+    final progress = getProgress();
+    final weeklyStats = getWeeklyStats();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Today's Activity")),
+      backgroundColor: Colors.grey.shade100,
       drawer: const AppDrawer(currentRoute: '/activity'),
-
+      appBar: AppBar(title: const Text("Today's Activity"), elevation: 0),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// PROGRESS BAR
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Text(
-                      "Today's Progress",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    LinearProgressIndicator(value: progress, minHeight: 10),
-
-                    const SizedBox(height: 10),
-
-                    Text(
-                      "${(progress * 100).toStringAsFixed(0)}% Completed",
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
+            /// 🔥 STREAK + PROGRESS CARD
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
                 ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Today's Progress",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      Text(
+                        "🔥 ${getStreak()} Hari",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.white24,
+                    color: Colors.white,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    "${(progress * 100).toInt()}% Completed",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            /// ACTIVITY LIST
+            /// 📋 LIST ACTIVITY
             Expanded(
-              child: schedules.isEmpty
-                  ? const Center(child: Text("No activities today"))
+              child: todayActivities.isEmpty
+                  ? const Center(child: Text("No activity today"))
                   : ListView.builder(
-                      itemCount: schedules.length,
+                      itemCount: todayActivities.length,
                       itemBuilder: (context, index) {
-                        final schedule = schedules[index];
-
-                        final completed = _isCompleted(schedule.key.toString());
+                        final activity = todayActivities[index];
 
                         return Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                           child: CheckboxListTile(
-                            title: Text(schedule.title),
-
-                            subtitle: Text(
-                              "${schedule.startTime} - ${schedule.endTime}",
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
                             ),
-
-                            value: completed,
-
-                            onChanged: (_) {
-                              _toggleActivity(schedule);
+                            title: Text(
+                              activity.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "${activity.startTime} - ${activity.endTime}",
+                            ),
+                            secondary: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.checklist,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            value: isCompleted(activity),
+                            onChanged: (value) {
+                              toggleComplete(activity, value!);
                             },
                           ),
                         );
                       },
                     ),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// 📈 WEEKLY STATS
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Weekly Stats",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: weeklyStats.entries.map((entry) {
+                  return Container(
+                    width: 90,
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade200, Colors.blue.shade400],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          entry.value.toString(),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ],
         ),

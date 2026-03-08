@@ -14,6 +14,7 @@ dependencies:
   hive_flutter: ^1.1.0
   cupertino_icons: ^1.0.8
   table_calendar: ^3.0.9
+  flutter_heatmap_calendar: ^1.0.5
 
 dev_dependencies:
   flutter_test:
@@ -27,4 +28,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - asset/images/BG_create.png
+    - assets/images/
+    

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import '../../../core/models/schedule_model.dart';
 import '../../../core/services/schedule_service.dart';
 import '../../../widgets/app_drawer.dart';
@@ -22,10 +21,14 @@ class _ScheduleListPageState extends State<ScheduleListPage> {
         : _service.getSchedules();
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+      drawer: const AppDrawer(currentRoute: '/viewall'),
       appBar: AppBar(
         title: const Text("Schedules"),
+        elevation: 0,
         actions: [
           IconButton(
+            tooltip: "Toggle Today Schedule",
             icon: Icon(showTodayOnly ? Icons.today : Icons.calendar_month),
             onPressed: () {
               setState(() {
@@ -36,47 +39,138 @@ class _ScheduleListPageState extends State<ScheduleListPage> {
         ],
       ),
 
-      drawer: AppDrawer(currentRoute: '/viewall'),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            /// HEADER INFO
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Your Schedules",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
 
-      body: schedules.isEmpty
-          ? const Center(child: Text("No schedules found"))
-          : ListView.builder(
-              itemCount: schedules.length,
-              itemBuilder: (context, index) {
-                final schedule = schedules[index];
+                      const SizedBox(height: 5),
 
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    title: Text(schedule.title),
-                    subtitle: Text(
-                      "${schedule.day} | ${schedule.startTime} - ${schedule.endTime}",
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        /// EDIT
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            _showEditDialog(schedule, index);
-                          },
+                      Text(
+                        "${schedules.length} activities",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-
-                        /// DELETE
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            await _service.deleteSchedule(index);
-                            setState(() {});
-                          },
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              },
+
+                  const Icon(Icons.event_note, color: Colors.white, size: 35),
+                ],
+              ),
             ),
+
+            const SizedBox(height: 20),
+
+            /// LIST SCHEDULE
+            Expanded(
+              child: schedules.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "No schedules found",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: schedules.length,
+                      itemBuilder: (context, index) {
+                        final schedule = schedules[index];
+
+                        return Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+
+                            /// ICON
+                            leading: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.schedule,
+                                color: Colors.blue,
+                              ),
+                            ),
+
+                            /// TITLE
+                            title: Text(
+                              schedule.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+
+                            /// SUBTITLE
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                "${schedule.day} • ${schedule.startTime} - ${schedule.endTime}",
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+
+                            /// ACTIONS
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                /// EDIT
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  color: Colors.blue,
+                                  onPressed: () {
+                                    _showEditDialog(schedule, index);
+                                  },
+                                ),
+
+                                /// DELETE
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  color: Colors.red,
+                                  onPressed: () async {
+                                    await _service.deleteSchedule(index);
+                                    setState(() {});
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -157,6 +251,7 @@ class _ScheduleListPageState extends State<ScheduleListPage> {
               ],
             ),
           ),
+
           actions: [
             TextButton(
               onPressed: () async {

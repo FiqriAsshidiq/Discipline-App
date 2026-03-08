@@ -6,6 +6,7 @@ import 'features/home_page.dart';
 import 'features/create/create_page.dart';
 import 'features/create/schedule_list_page.dart';
 import 'features/activity/activity_page.dart';
+import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,9 +36,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      initialRoute: '/home',
+      initialRoute: '/splash',
 
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/home': (context) => const HomePage(),
         '/create': (context) => const CreatePage(),
         '/viewall': (context) => const ScheduleListPage(),
